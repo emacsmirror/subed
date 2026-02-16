@@ -2,6 +2,11 @@
 
 * subed news
 
+** Version 1.4.1 - 2026-02-16 - Sacha Chua
+
+- You can now use Montreal Forced Aligner or Aeneas to generate word timestamps using ~subed-align-mfa-set-word-data~ or ~subed-align-aeneas-set-word-data~.
+- subed-word-data now uses approximate matches by default.
+
 ** Version 1.4.0 - 2026-02-10 - Sacha Chua
 
 - subed-word-data.el can now load word timing from TextGrid files produced by the Montreal Forced Aligner.

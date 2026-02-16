@@ -41,6 +41,14 @@
 Ex: task_adjust_boundary_nonspeech_min=0.500|task_adjust_boundary_nonspeech_string=REMOVE
 will remove silence and other non-speech spans.")
 
+(defvar subed-align-mfa-conda-env "~/miniconda/env/aligner"
+  "Set this to the path to your Conda environment.")
+(defvar subed-align-mfa-command '("mfa" "align")
+  "Command to run the Montreal Forced Aligner.")
+(defvar subed-align-mfa-dictionary "french_mfa")
+(defvar subed-align-mfa-acoustic-model "french_mfa")
+
+
 ;;;###autoload
 (defun subed-align-region (audio-file beg end)
   "Align just the given section."
@@ -163,6 +171,127 @@ Return the new filename."
       (when (called-interactively-p 'any)
         (find-file new-file))
       new-file)))
+
+;; TODO Scope it to the region
+(defun subed-align-aeneas-set-word-data (audio-file)
+  "Align AUDIO-FILE with TEXT-FILE to get timestamps in FORMAT.
+Store the word data in `subed-word-data--cache' for use by subed-word-data.
+This uses the Aeneas forced aligner."
+  (interactive
+   (list
+    (or
+     (subed-media-file)
+     (subed-guess-media-file subed-audio-extensions)
+     (read-file-name "Audio file: "))))
+  (unless (derived-mode-p 'subed-mode)
+    (error "Must be in `subed-mode' buffer."))
+  (let ((temp-input (make-temp-file "subed-align-input" nil ".txt"))
+        (temp-output (make-temp-file "subed-align-output" nil ".txt"))
+        (json-object-type 'alist)
+        (json-array-type 'list)
+        data)
+    (write-region
+     (if (derived-mode-p 'subed-mode)
+         (mapconcat
+          (lambda (o) (elt o 3)) (subed-subtitle-list)
+          "\n\n")
+       (buffer-string))
+     nil temp-input)
+    (apply
+     #'call-process
+     (car subed-align-command)
+     nil
+     (get-buffer-create "*subed-aeneas*")
+     t
+     (append (cdr subed-align-command)
+             (list (expand-file-name audio-file)
+                   temp-input
+                   (format "task_language=%s|is_text_type=mplain|os_task_file_levels=3|os_task_file_format=json%s"
+                           subed-align-language
+                           (if subed-align-options (concat "|" subed-align-options) ""))
+                   temp-output)))
+    (setq data (mapcar
+                (lambda (o)
+                  (let-alist o
+                    `((start . ,(* 1000 (string-to-number .begin)))
+                      (end . ,(* 1000 (string-to-number .end)))
+                      (text . ,(string-join .lines " ")))))
+                (alist-get 'fragments
+                           (with-temp-buffer
+                             (insert-file-contents temp-output)
+                             (goto-char (point-min))
+                             (json-read)))))
+    (subed-word-data--load data)
+    (delete-file temp-input)
+    (delete-file temp-output)
+    data))
+
+(defun subed-align-mfa-process-environment ()
+  "Return process-environment with conda env activated."
+  (let* ((env-bin (expand-file-name "bin" subed-align-mfa-conda-env))
+         (env-lib (expand-file-name "lib" subed-align-mfa-conda-env))
+         (path-var (concat env-bin ":" (getenv "PATH")))
+         (ld-library-path (concat env-lib ":" (or (getenv "LD_LIBRARY_PATH") ""))))
+    (list (concat "PATH=" path-var)
+          (concat "LD_LIBRARY_PATH=" ld-library-path)
+          (concat "CONDA_PREFIX=" (expand-file-name subed-align-mfa-conda-env))
+          (concat "CONDA_DEFAULT_ENV=aligner"))))
+
+;;;###autoload
+(defun subed-align-mfa-set-word-data (audio-file)
+  "Set the word data using Montreal Forced Aligner."
+  (interactive
+   (list
+    (or
+     (subed-media-file)
+     (subed-guess-media-file subed-audio-extensions)
+     (read-file-name "Audio file: "))))
+  ;; MFA expects audio and text
+  (let* ((temp-input (make-temp-file "subed-align-mfa-input" t))
+         (temp-output (make-temp-file "subed-align-mfa-output" t))
+         (input-wav (expand-file-name "input.wav" temp-input)))
+    ;; Set up input.wav
+    (if (string= (downcase (file-name-extension audio-file)) "wav")
+        (copy-file audio-file input-wav)
+      (call-process
+       subed-ffmpeg-executable
+       nil (get-buffer-create "*mfa*") nil
+       "-i"
+       audio-file
+       "-ar"
+       "16000"
+       input-wav))
+    ;; Set up input.txt
+    (write-region
+     (if (derived-mode-p 'subed-mode)
+         (mapconcat
+          (lambda (o) (elt o 3)) (subed-subtitle-list)
+          "\n\n")
+       (buffer-string))
+     nil (expand-file-name "input.txt" temp-input))
+    (let ((process-environment (append
+                                (and subed-align-mfa-conda-env (subed-align-mfa-process-environment))
+                                process-environment)))
+      (apply #'call-process
+             (if subed-align-mfa-conda-env
+                 (expand-file-name
+                  (car subed-align-mfa-command)
+                  (expand-file-name
+                   "bin"
+                   subed-align-mfa-conda-env))
+               (car subed-align-mfa-command))
+             nil (get-buffer-create "*mfa*") nil
+             (append
+              (cdr subed-align-mfa-command)
+              (list
+               temp-input
+               subed-align-mfa-dictionary
+               subed-align-mfa-acoustic-model
+               temp-output))))
+    (subed-word-data-load-from-file (expand-file-name "input.TextGrid"
+                                                      temp-output))
+    (delete-directory temp-input t)
+    (delete-directory temp-output t)))
 
 (defun subed-align-reinsert-comments (subtitles)
   "Reinsert the comments from SUBTITLES.

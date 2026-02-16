@@ -257,7 +257,19 @@ For now, only JSON or SRV2 files are supported."
   (string= (subed-word-data-normalize-word word1)
            (subed-word-data-normalize-word word2)))
 
-(defvar subed-word-data-compare-function 'subed-word-data-compare-normalized-string=
+(defvar subed-word-data-compare-normalized-string-distance-threshold 0.2
+  "Factor used for similarity comparison.")
+
+(defun subed-word-data-compare-normalized-string-distance (word1 word2)
+  "Compare two words and return t if they are similar enough after normalization.
+See `subed-word-data-compare-normalized-string-distance-threshold'."
+  (let ((w1 (subed-word-data-normalize-word word1))
+        (w2 (subed-word-data-normalize-word word2)))
+    (< (/ (string-distance w1 w2)
+          (* 1.0 (max (length w1) (length w2))))
+       subed-word-data-compare-normalized-string-distance-threshold)))
+
+(defvar subed-word-data-compare-function 'subed-word-data-compare-normalized-string-distance
   "Function to use to compare.")
 
 (defun subed-word-data-compare (word1 word2)
@@ -306,10 +318,10 @@ Return non-nil if they are the same after normalization."
     (let ((time (assoc-default 'start (subed-word-data--look-up-word))))
       (when time (- time subed-subtitle-spacing))))))
 
-(defun subed-word-data-subtitle-entries (&optional fuzz-factor)
+(defun subed-word-data-subtitle-entries ()
   "Return the entries that start and end within the current subtitle."
-  (let ((start (- (subed-subtitle-msecs-start) (or fuzz-factor subed-subtitle-spacing)))
-        (stop (+ (subed-subtitle-msecs-stop) (or fuzz-factor subed-subtitle-spacing))))
+  (let ((start (- (subed-subtitle-msecs-start) subed-word-data-fuzz-ms))
+        (stop (+ (subed-subtitle-msecs-stop) subed-word-data-fuzz-ms)))
     (seq-filter
      (lambda (o)
        (and (<= (or (alist-get 'end o) most-positive-fixnum) stop)
@@ -319,7 +331,7 @@ Return non-nil if they are the same after normalization."
 
 (defvar subed-word-data-threshold 5
   "Number of words to consider for matching.")
-(defvar subed-word-data-fuzz-factor 200
+(defvar subed-word-data-fuzz-ms 500
   "Milliseconds to consider before or after a subtitle.")
 
 (defun subed-word-data-refresh-text-properties-for-subtitle ()
@@ -329,7 +341,7 @@ Return non-nil if they are the same after normalization."
                           '(subed-word-data-start subed-word-data-end font-lock-face))
   (let* ((text-start (progn (subed-jump-to-subtitle-text) (point)))
          pos
-         (word-data (reverse (subed-word-data-subtitle-entries subed-word-data-fuzz-factor)))
+         (word-data (reverse (subed-word-data-subtitle-entries)))
          candidate
          cand-count)
     (subed-jump-to-subtitle-end)
@@ -338,12 +350,13 @@ Return non-nil if they are the same after normalization."
       (setq pos (point))
       (backward-word)
       (let ((try-list word-data)
+            (current-word (buffer-substring (point) pos))
             candidate)
         (setq candidate (car try-list) cand-count 0)
         (setq try-list (cdr try-list))
         (while (and candidate
                     (< cand-count subed-word-data-threshold)
-                    (not (subed-word-data-compare (buffer-substring (point) pos)
+                    (not (subed-word-data-compare current-word
                                    (alist-get 'text candidate))))
           (setq candidate (car try-list) cand-count (1+ cand-count))
           (when (> cand-count subed-word-data-threshold)
@@ -415,7 +428,7 @@ This only works for VTTs."
       (while (not (eobp))
         (let* ((text-start (progn (subed-jump-to-subtitle-text) (point)))
                pos
-               (word-data (reverse (subed-word-data-subtitle-entries subed-word-data-fuzz-factor)))
+               (word-data (reverse (subed-word-data-subtitle-entries)))
                candidate)
           (subed-jump-to-subtitle-end)
           (while (> (point) text-start)
