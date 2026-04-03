@@ -554,7 +554,7 @@ You'll need to install the =buttercup= and =package-lint= Emacs packages. You'll
 To re-run tests automatically when files change, something like nodemon might be helpful.
 
 #+begin_src sh :eval no
-nodemon -w tests/*.el -w subed/*.el -x "make test"
+nodemon -w "tests/*.el" -w "subed/*.el" -x "make test"
 #+end_src
 
 To run only matching tests, use:
@@ -562,6 +562,13 @@ To run only matching tests, use:
 #+begin_src sh :eval no
 PATTERN=regexp make test-some
 #+end_src
+
+Combining the two:
+
+#+begin_src sh :eval no
+nodemon -w "tests/*.el" -w "subed/*.el" -x "PATTERN=regexp make test-some"
+#+end_src
+
 ** Contributions
 :PROPERTIES:
 :CUSTOM_ID: subed-contributions

@@ -930,7 +930,7 @@ must be a number."
 					 (expect (subed-subtitle-msecs-stop 2) :to-equal 3000)
 					 (expect (point) :to-equal orig-point)))))
     (describe "adjusts subtitles in the active region,"
-      (it "excluding the first subtitle."
+      (it "excludes the first subtitle."
         (with-temp-srt-buffer
 				 (insert (concat "1\n"
 												 "00:00:01,000 --> 00:00:02,000\n"
@@ -941,9 +941,9 @@ must be a number."
 												 "3\n"
 												 "00:00:05,000 --> 00:00:06,000\n"
 												 "Baz.\n"))
+				 (goto-char (subed-jump-to-subtitle-text 2))
+				 (push-mark (save-excursion (subed-jump-to-subtitle-time-start 3)) t t)
 				 (setq mark-active t)
-				 (spy-on 'region-beginning :and-return-value (subed-jump-to-subtitle-text 2))
-				 (spy-on 'region-end :and-return-value (subed-jump-to-subtitle-time-start 3))
 				 (let ((orig-point (subed-jump-to-subtitle-text 2)))
 					 (subed-move-subtitle-forward 100)
 					 (expect (subed-subtitle-msecs-start 1) :to-equal 1000)
@@ -953,6 +953,9 @@ must be a number."
 					 (expect (subed-subtitle-msecs-start 3) :to-equal 5100)
 					 (expect (subed-subtitle-msecs-stop 3) :to-equal 6100)
 					 (expect (point) :to-equal orig-point)
+           (goto-char (subed-jump-to-subtitle-text 2))
+           (push-mark (save-excursion (subed-jump-to-subtitle-time-start 3)) t t)
+           (setq mark-active t)
 					 (subed-move-subtitle-backward 200)
 					 (expect (subed-subtitle-msecs-start 1) :to-equal 1000)
 					 (expect (subed-subtitle-msecs-stop 1) :to-equal 2000)
@@ -961,7 +964,7 @@ must be a number."
 					 (expect (subed-subtitle-msecs-start 3) :to-equal 4900)
 					 (expect (subed-subtitle-msecs-stop 3) :to-equal 5900)
 					 (expect (point) :to-equal orig-point))))
-      (it "excluding the last subtitle."
+      (it "excludes the last subtitle."
         (with-temp-srt-buffer
 				 (insert (concat "1\n"
 												 "00:00:01,000 --> 00:00:02,000\n"
@@ -973,9 +976,10 @@ must be a number."
 												 "00:00:05,000 --> 00:00:06,000\n"
 												 "Baz.\n"))
 				 (setq mark-active t)
-				 (spy-on 'region-beginning :and-return-value (subed-jump-to-subtitle-text 1))
-				 (spy-on 'region-end :and-return-value (subed-jump-to-subtitle-time-stop 2))
-				 (let ((orig-point (subed-jump-to-subtitle-time-stop 3)))
+				 (goto-char (subed-jump-to-subtitle-text 1))
+				 (push-mark (save-excursion (subed-jump-to-subtitle-time-stop 2)) t t)
+         (setq mark-active t)
+				 (let ((orig-point (save-excursion (point))))
 					 (subed-move-subtitle-forward 500)
 					 (expect (subed-subtitle-msecs-start 1) :to-equal 1500)
 					 (expect (subed-subtitle-msecs-stop 1) :to-equal 2500)
@@ -1005,8 +1009,8 @@ must be a number."
 									 "00:00:12,000 --> 00:00:13,000\n"
 									 "Baz.\n")
 					 (setq mark-active t)
-					 (spy-on 'region-beginning :and-return-value (subed-jump-to-subtitle-id 1))
-					 (spy-on 'region-end :and-return-value (subed-jump-to-subtitle-text 2))
+					 (goto-char (subed-jump-to-subtitle-id 1))
+					 (push-mark (subed-jump-to-subtitle-text 2) t t)
 					 (let ((orig-point (subed-jump-to-subtitle-time-start 1))
 								 (subed-enforce-time-boundaries nil))
 						 (subed-move-subtitle-forward 2000)
@@ -1029,8 +1033,8 @@ must be a number."
 													 "00:00:10,000 --> 00:00:11,000\n"
 													 "Baz.\n"))
 					 (setq mark-active t)
-					 (spy-on 'region-beginning :and-return-value (subed-jump-to-subtitle-id 2))
-					 (spy-on 'region-end :and-return-value (subed-jump-to-subtitle-text 3))
+					 (goto-char (subed-jump-to-subtitle-id 2))
+					 (push-mark (subed-jump-to-subtitle-text 3) t t)
 					 (let ((orig-point (subed-jump-to-subtitle-time-start 2))
 								 (subed-enforce-time-boundaries nil))
 						 (subed-move-subtitle-backward 1000)
@@ -1056,8 +1060,8 @@ must be a number."
 		;; 												"00:00:11,000 --> 00:00:12,000\n"
 		;; 												"Baz.\n"))
 		;; 				(setq mark-active t)
-		;; 				(spy-on 'region-beginning :and-return-value (subed-jump-to-subtitle-id 1))
-		;; 				(spy-on 'region-end :and-return-value (subed-jump-to-subtitle-text 2))
+		;; 				(goto-char (subed-jump-to-subtitle-id 1))
+		;; 				(push-mark (subed-jump-to-subtitle-text 2) t t)
 		;; 				(let ((orig-point (subed-jump-to-subtitle-text 1)))
 		;; 					(subed-move-subtitle-forward 1)
 		;; 					(expect (subed-subtitle-msecs-start 1) :to-equal 1000)
@@ -1079,8 +1083,8 @@ must be a number."
 		;; 											"00:00:11,000 --> 00:00:12,000\n"
 		;; 											"Baz.\n"))
 		;; 			(setq mark-active t)
-		;; 			(spy-on 'region-beginning :and-return-value (subed-jump-to-subtitle-id 2))
-		;; 			(spy-on 'region-end :and-return-value (subed-jump-to-subtitle-text 3))
+		;; 			(goto-char (subed-jump-to-subtitle-id 2))
+		;; 			(push-mark (subed-jump-to-subtitle-text 3) t t)
 		;; 			(let ((orig-point (subed-jump-to-subtitle-id 3)))
 		;; 				(subed-move-subtitle-backward 1)
 		;; 				(expect (subed-subtitle-msecs-start 1) :to-equal 1000)
@@ -1091,8 +1095,8 @@ must be a number."
 		;; 				(expect (subed-subtitle-msecs-stop 3) :to-equal 12000)
 		;; 				(expect (point) :to-equal orig-point))))
     ;;   )
-    (describe "ignoring spacing for non-leading subtitles"
-      (it "when moving forward."
+    (describe "when ignoring spacing for non-leading subtitles"
+      (it "handles moving forward."
         (with-temp-srt-buffer
 				 (insert (concat "1\n"
 												 "00:00:00,000 --> 00:00:01,000\n"
@@ -1103,10 +1107,9 @@ must be a number."
 												 "3\n"
 												 "00:00:05,000 --> 00:00:6,000\n"
 												 "Baz.\n"))
-				 (setq mark-active t)
-				 (spy-on 'region-beginning :and-return-value (subed-jump-to-subtitle-id 1))
-				 (spy-on 'region-end :and-return-value (subed-jump-to-subtitle-text 2))
-				 (let ((orig-point (subed-jump-to-subtitle-time-start 3)))
+				 (goto-char (subed-jump-to-subtitle-id 1))
+				 (push-mark (save-excursion (subed-jump-to-subtitle-text 2)) t t)
+				 (let ((orig-point (point)))
 					 (subed-move-subtitle-forward 1000)
 					 (expect (subed-subtitle-msecs-start 1) :to-equal 1000)
 					 (expect (subed-subtitle-msecs-stop 1) :to-equal 2000)
@@ -1115,7 +1118,7 @@ must be a number."
 					 (expect (subed-subtitle-msecs-start 3) :to-equal 5000)
 					 (expect (subed-subtitle-msecs-stop 3) :to-equal 6000)
 					 (expect (point) :to-equal orig-point))))
-      (it "when moving backward."
+      (it "handles moving backward."
         (with-temp-srt-buffer
 				 (insert (concat "1\n"
 												 "00:00:01,000 --> 00:00:02,000\n"
@@ -1126,10 +1129,9 @@ must be a number."
 												 "3\n"
 												 "00:00:05,000 --> 00:00:05,000\n"
 												 "Baz.\n"))
-				 (setq mark-active t)
-				 (spy-on 'region-beginning :and-return-value (subed-jump-to-subtitle-id 2))
-				 (spy-on 'region-end :and-return-value (subed-jump-to-subtitle-text 3))
-				 (let ((orig-point (subed-jump-to-subtitle-time-stop 1)))
+				 (goto-char (subed-jump-to-subtitle-id 2))
+				 (push-mark (save-excursion (subed-jump-to-subtitle-text 3)) t t)
+				 (let ((orig-point (point)))
 					 (subed-move-subtitle-backward 1000)
 					 (expect (subed-subtitle-msecs-start 1) :to-equal 1000)
 					 (expect (subed-subtitle-msecs-stop 1) :to-equal 2000)
@@ -1139,8 +1141,8 @@ must be a number."
 					 (expect (subed-subtitle-msecs-stop 3) :to-equal 4000)
 					 (expect (point) :to-equal orig-point))))
       )
-    (describe "ignoring overlapping subtitles"
-      (it "when moving forward."
+    (describe "when ignoring overlapping subtitles"
+      (it "handles moving forward."
         (with-temp-srt-buffer
 				 (insert (concat "1\n"
 												 "00:00:01,000 --> 00:00:01,500\n"
@@ -1151,10 +1153,9 @@ must be a number."
 												 "3\n"
 												 "00:00:05,000 --> 00:00:6,000\n"
 												 "Baz.\n"))
-				 (setq mark-active t)
-				 (spy-on 'region-beginning :and-return-value (subed-jump-to-subtitle-id 1))
-				 (spy-on 'region-end :and-return-value (subed-jump-to-subtitle-text 2))
-				 (let ((orig-point (subed-jump-to-subtitle-text 2)))
+				 (goto-char (subed-jump-to-subtitle-id 1))
+				 (push-mark (save-excursion (subed-jump-to-subtitle-text 2)) t t)
+				 (let ((orig-point (point)))
 					 (subed-move-subtitle-forward 1000)
 					 (expect (subed-subtitle-msecs-start 1) :to-equal 2000)
 					 (expect (subed-subtitle-msecs-stop 1) :to-equal 2500)
@@ -1163,7 +1164,7 @@ must be a number."
 					 (expect (subed-subtitle-msecs-start 3) :to-equal 5000)
 					 (expect (subed-subtitle-msecs-stop 3) :to-equal 6000)
 					 (expect (point) :to-equal orig-point))))
-      (it "when moving backward."
+      (it "handles moving backward."
         (with-temp-srt-buffer
 				 (insert (concat "1\n"
 												 "00:00:01,000 --> 00:00:02,000\n"
@@ -1174,10 +1175,9 @@ must be a number."
 												 "3\n"
 												 "00:00:04,500 --> 00:00:04,490\n"
 												 "Baz.\n"))
-				 (setq mark-active t)
-				 (spy-on 'region-beginning :and-return-value (subed-jump-to-subtitle-id 2))
-				 (spy-on 'region-end :and-return-value (subed-jump-to-subtitle-text 3))
-				 (let ((orig-point (subed-jump-to-subtitle-text 1)))
+				 (goto-char (subed-jump-to-subtitle-id 2))
+				 (push-mark (save-excursion (subed-jump-to-subtitle-text 3)) t t)
+				 (let ((orig-point (point)))
 					 (subed-move-subtitle-backward 1000)
 					 (expect (subed-subtitle-msecs-start 1) :to-equal 1000)
 					 (expect (subed-subtitle-msecs-stop 1) :to-equal 2000)
@@ -1198,10 +1198,9 @@ must be a number."
 											 "3\n"
 											 "00:00:05,000 --> 00:00:06,000\n"
 											 "Bar.\n"))
-			 (setq mark-active t)
-			 (spy-on 'region-beginning :and-return-value (subed-jump-to-subtitle-text 1))
-			 (spy-on 'region-end :and-return-value (subed-jump-to-subtitle-time-start 2))
-			 (let ((orig-point (subed-jump-to-subtitle-time-stop 1)))
+			 (goto-char (subed-jump-to-subtitle-text 1))
+			 (push-mark (save-excursion (subed-jump-to-subtitle-time-start 2)) t t)
+			 (let ((orig-point (point)))
 				 (subed-move-subtitle-forward 1000)
 				 (expect (subed-subtitle-msecs-start 1) :to-equal 2500)
 				 (expect (subed-subtitle-msecs-stop 1) :to-equal 2400)
@@ -1229,10 +1228,9 @@ must be a number."
 											 "3\n"
 											 "00:00:05,500 --> 00:00:05,000\n"
 											 "Bar.\n"))
-			 (setq mark-active t)
-			 (spy-on 'region-beginning :and-return-value (subed-jump-to-subtitle-text 2))
-			 (spy-on 'region-end :and-return-value (subed-jump-to-subtitle-time-start 3))
-			 (let ((orig-point (subed-jump-to-subtitle-text 1)))
+       (goto-char (subed-jump-to-subtitle-text 2))
+       (push-mark (save-excursion (subed-jump-to-subtitle-time-start 3)) t t)
+			 (let ((orig-point (point)))
 				 (subed-move-subtitle-forward 1000)
 				 (expect (subed-subtitle-msecs-start 1) :to-equal 1000)
 				 (expect (subed-subtitle-msecs-stop 1) :to-equal 2000)
@@ -1297,9 +1295,8 @@ must be a number."
 			 (insert mock-srt-data)
 			 (let ((beg 15)
 						 (end (point-max)))
-				 (setq mark-active t)
-				 (spy-on 'region-beginning :and-return-value beg)
-				 (spy-on 'region-end :and-return-value end)
+				 (goto-char beg)
+				 (push-mark end t t)
 				 (spy-on 'subed-replay-adjusted-subtitle-p :and-return-value t)
 				 (spy-on 'subed-mpv-jump)
 				 (subed-move-subtitle-forward 100)
@@ -2894,10 +2891,9 @@ This is another.
 			 (insert mock-srt-data)
 			 (let ((beg (point-min))
 						 (end (point-max)))
+         (goto-char (point-min))
+         (push-mark (point-max) t t)
 				 (spy-on 'subed-scale-subtitles :and-call-through)
-				 (spy-on 'region-beginning :and-return-value beg)
-				 (spy-on 'region-end :and-return-value end)
-				 (setq mark-active t)
 				 (subed-scale-subtitles-forward 1000)
 				 (expect (subed-subtitle-msecs-start 1) :to-equal 61000)
 				 (expect (subed-subtitle-msecs-stop 1) :to-equal 65123)
@@ -2905,6 +2901,8 @@ This is another.
 				 (expect (subed-subtitle-msecs-stop 2) :to-equal 130845)
 				 (expect (subed-subtitle-msecs-start 3) :to-equal 184450)
 				 (expect (subed-subtitle-msecs-stop 3) :to-equal 196500)
+         (goto-char (point-min))
+         (push-mark (point-max) t t)
 				 (subed-scale-subtitles-backward 1000)
 				 (expect (subed-subtitle-msecs-start 1) :to-equal 61000)
 				 (expect (subed-subtitle-msecs-stop 1) :to-equal 65123)
@@ -2913,8 +2911,8 @@ This is another.
 				 (expect (subed-subtitle-msecs-start 3) :to-equal 183450)
 				 (expect (subed-subtitle-msecs-stop 3) :to-equal 195500)
 				 (expect (spy-calls-all-args 'subed-scale-subtitles) :to-equal
-								 `((+1000 ,beg ,end)
-									 (-1000 ,beg ,end))))))
+								 `((+1000 1 111)
+									 (-1000 1 114))))))
     (it "with a zero msec extension/contraction."
       (with-temp-srt-buffer
 			 (insert mock-srt-data)
@@ -2937,10 +2935,9 @@ This is another.
 			 (insert mock-srt-data)
 			 (let ((beg 77) ; point at ID of third subtitle
 						 (end (point-max)))
-				 (spy-on 'region-beginning :and-return-value beg)
-				 (spy-on 'region-end :and-return-value end)
+         (goto-char beg)
+         (push-mark end t t)
 				 (spy-on 'user-error :and-call-through)
-				 (setq mark-active t)
 				 (expect (subed-scale-subtitles-forward 1000) :to-throw 'error)
 				 (expect (spy-calls-all-args 'user-error) :to-equal
 								 '(("Can't scale with fewer than 3 subtitles")))
@@ -2950,10 +2947,9 @@ This is another.
 			 (insert mock-srt-data)
 			 (let ((beg 39) ; point at ID of second subtitle
 						 (end (point-max)))
-				 (spy-on 'region-beginning :and-return-value beg)
-				 (spy-on 'region-end :and-return-value end)
+         (goto-char beg)
+         (push-mark end t t)
 				 (spy-on 'user-error :and-call-through)
-				 (setq mark-active t)
 				 (expect (subed-scale-subtitles-forward 1000) :to-throw 'error)
 				 (expect (spy-calls-all-args 'user-error) :to-equal
 								 '(("Can't scale with only 2 subtitles")))
@@ -2977,9 +2973,8 @@ This is another.
 											 "d\n"))
 			 (let ((beg (point-min))
 						 (end 103)) ; point at TEXT of third subtitle
-				 (spy-on 'region-beginning :and-return-value beg)
-				 (spy-on 'region-end :and-return-value end)
-				 (setq mark-active t)
+         (goto-char beg)
+         (push-mark end t t)
 				 (subed-scale-subtitles-backward 1000)
 				 (expect (subed-subtitle-msecs-start 1) :to-equal 43233)
 				 (expect (subed-subtitle-msecs-stop 1) :to-equal 45861)
@@ -3008,9 +3003,8 @@ This is another.
 											 "d\n"))
 			 (let ((beg (point-min))
 						 (end 103)) ; point at TEXT of third subtitle
-				 (spy-on 'region-beginning :and-return-value beg)
-				 (spy-on 'region-end :and-return-value end)
-				 (setq mark-active t)
+         (goto-char beg)
+         (push-mark end t t)
 				 (setq-local subed-subtitle-spacing 0)
 				 (subed-scale-subtitles-forward 1000)
 				 (expect (subed-subtitle-msecs-start 1) :to-equal 43233)
@@ -3042,11 +3036,11 @@ This is another.
 												"d\n"))
 							 (beg 1)
 							 (end 103)) ; point at TEXT of third subtitle
-					 (spy-on 'region-beginning :and-return-value beg)
-					 (spy-on 'region-end :and-return-value end)
-					 (spy-on 'user-error :and-call-through)
 					 (insert initial-contents)
+           (goto-char beg)
+           (push-mark end t t)
 					 (setq mark-active t)
+					 (spy-on 'user-error :and-call-through)
 					 (let ((subed-enforce-time-boundaries 'error))
 						 (expect (subed-scale-subtitles-forward 1000) :to-throw 'error))
 					 (expect (spy-calls-all-args 'user-error) :to-equal
@@ -3059,10 +3053,9 @@ This is another.
 							 (end (point-max))
 							 (delta (- (subed-subtitle-msecs-start 3)
 												 (subed-subtitle-msecs-start 1))))
-					 (spy-on 'region-beginning :and-return-value beg)
-					 (spy-on 'region-end :and-return-value end)
+           (goto-char beg)
+           (push-mark end t t)
 					 (spy-on 'user-error :and-call-through)
-					 (setq mark-active t)
 					 (expect (subed-scale-subtitles-backward delta) :to-throw 'error)
 					 (expect (spy-calls-all-args 'user-error) :to-equal
 									 '(("Can't scale when contraction would eliminate region")))
@@ -3074,10 +3067,9 @@ This is another.
 						 (end (point-max))
 						 (delta (- (subed-subtitle-msecs-start 3)
 											 (subed-subtitle-msecs-start 1))))
-				 (spy-on 'region-beginning :and-return-value beg)
-				 (spy-on 'region-end :and-return-value end)
+         (goto-char beg)
+         (push-mark end t t)
 				 (spy-on 'user-error :and-call-through)
-				 (setq mark-active t)
 				 (expect (subed-scale-subtitles-backward (+ delta 1)) :to-throw 'error)
 				 (expect (spy-calls-all-args 'user-error) :to-equal
 								 '(("Can't scale when contraction would eliminate region")))
@@ -3089,9 +3081,8 @@ This is another.
 						 (end (point-max))
 						 (delta (- (subed-subtitle-msecs-start 3)
 											 (subed-subtitle-msecs-start 1))))
-				 (spy-on 'region-beginning :and-return-value beg)
-				 (spy-on 'region-end :and-return-value end)
-				 (setq mark-active t)
+         (goto-char beg)
+         (push-mark end t t)
 				 (subed-scale-subtitles-backward (- delta 1))
 				 (expect (subed-subtitle-msecs-start 1) :to-equal 61000)
 				 (expect (subed-subtitle-msecs-stop 1) :to-equal 65123)
@@ -3496,6 +3487,7 @@ This is another.
 									 "2\n00:00:03,000 --> 00:00:04,500\nA\n\n"
                    "3\n00:00:04,000 --> 00:00:06,000\nA\n\n"
 									 "4\n00:00:05,000 --> 00:00:06,000\nA\n\n")
+           (spy-on 'yes-or-no-p :and-return-value t)
 					 (subed-prepare-to-save)
 					 (expect (subed-subtitle-msecs-stop 1) :to-equal 2000)
 					 (expect (subed-subtitle-msecs-stop 2) :to-equal 3800)
@@ -3513,9 +3505,9 @@ This is another.
 							 (subed-subtitle-spacing 200)
 							 (subed-enforce-time-boundaries 'adjust)
 							 (buffer-modified-p nil))
+					 (spy-on 'yes-or-no-p :and-return-value t)
 					 (spy-on 'subed-trim-overlap-check :and-call-through)
 					 (spy-on 'subed-trim-overlaps :and-call-through)
-					 (spy-on 'yes-or-no-p :and-return-value t)
 					 (subed-prepare-to-save)
 					 (expect 'subed-trim-overlap-check :to-have-been-called)
 					 (expect 'yes-or-no-p :to-have-been-called)
