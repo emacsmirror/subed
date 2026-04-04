@@ -2701,4 +2701,41 @@ hi<00:00:03.459><c> welcome</c><00:00:03.850><c> to</c><00:00:03.999><c> another
        (insert "WebVTT\n\n00:00:00.003 --> 00:00:05.123\nThis is <00:00:01.000>is a test\n\n")
        (re-search-backward "01\\.000")
        (forward-char 2)
-       (expect (subed-timestamp-at-point) :to-equal "00:00:01.000")))))
+       (expect (subed-timestamp-at-point) :to-equal "00:00:01.000"))))
+  (describe "combining subtitles from multiple speakers"
+    (it "works for subtitle lists."
+      (expect
+       (subed-vtt-combine-separate-speaker-files
+        '(("Host"
+           (nil 1000 2000 "Sentence A")
+           (nil 4000 5000 "Sentence B"))
+          ("Guest"
+           (nil 500 2000 "Sentence 1")
+           (nil 2500 2700 "Sentence 2")
+           (nil 2701 2800 "Sentence 3"))))
+       :to-equal
+       '((nil 500 2000 "<v Guest>Sentence 1</v>")
+         (nil 1000 2000 "<v Host>Sentence A</v>")
+         (nil 2500 2700 "<v Guest>Sentence 2</v>")
+         (nil 2701 2800 "<v Guest>Sentence 3</v>")
+         (nil 4000 5000 "<v Host>Sentence B</v>"))))
+    (it "works for subtitle files."
+      (expect
+       (cl-labels
+           (((symbol-function 'subed-parse-file)
+             (lambda (filename &optional mode-func)
+               (if (string-match "host" filename)
+                   '((nil 1000 2000 "Sentence A")
+                     (nil 4000 5000 "Sentence B"))
+                 '((nil 500 2000 "Sentence 1")
+                   (nil 2500 2700 "Sentence 2")
+                   (nil 2701 2800 "Sentence 3"))))))
+         (subed-vtt-combine-separate-speaker-files
+          '(("Host" . "/tmp/host.vtt")
+            ("Guest" . "/tmp/guest.vtt"))))
+       :to-equal
+       '((nil 500 2000 "<v Guest>Sentence 1</v>")
+         (nil 1000 2000 "<v Host>Sentence A</v>")
+         (nil 2500 2700 "<v Guest>Sentence 2</v>")
+         (nil 2701 2800 "<v Guest>Sentence 3</v>")
+         (nil 4000 5000 "<v Host>Sentence B</v>"))))))

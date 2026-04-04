@@ -106,11 +106,11 @@ format-specific function for MAJOR-MODE."
     ;; Move to first subtitle that starts at or after MSECS
     (catch 'subtitle-id
       (while (<= (or (subed-subtitle-msecs-start) -1) msecs)
-        ;; If stop time is >= MSECS, we found a match
-        (let ((cur-sub-end (subed-subtitle-msecs-stop)))
+            ;; If stop time is >= MSECS, we found a match
+            (let ((cur-sub-end (subed-subtitle-msecs-stop)))
           (when (and cur-sub-end (>= cur-sub-end msecs))
             (throw 'subtitle-id (subed-subtitle-id))))
-        (unless (subed-forward-subtitle-id)
+                (unless (subed-forward-subtitle-id)
           (throw 'subtitle-id nil))))))
 
 ;;; Traversing
@@ -613,6 +613,62 @@ Use the format-specific function for MAJOR-MODE."
   "Insert current playback position as a word timestamp."
   (interactive)
   (insert "<" (subed-msecs-to-timestamp subed-mpv-playback-position) ">"))
+
+;;;###autoload
+(defun subed-vtt-combine-separate-speaker-files (output-file subtitle-info)
+  "Combine subtitles from separate VTT files for speakers.
+SUBTITLE-INFO is an alist. It could be of the form:
+
+'((\"host\" . \"/path/to/host.vtt\")
+  (\"guest\" . \"/path/to/guest.vtt\")
+  ...)
+
+or:
+
+'((\"host\" subtitle subtitle subtitle) ...)
+
+where subtitle is like the result of `subed-subtitle'.
+
+Subtitles will be chronologically sorted.
+VTT speaker tags will be added.
+
+Write the results to OUTPUT-FILE.
+
+If OUTPUT-FILE is t, return a list of subtitles suitable for `subed-create-file'.
+
+If called interactively, prompt for the output file, and then prompt for
+labels and input files until a blank label is specified.
+"
+  (interactive
+   ;; TODO
+   (list
+    (read-file-name "Output VTT: ")
+    (let (results label)
+      (while (not (string= (setq label (read-string "Label: ")) ""))
+        (push
+         (cons
+          label
+          (read-file-name (format "VTT for %s: " label)))
+         results))
+      (nreverse results))))
+  (let ((results (sort
+   (seq-mapcat
+    (lambda (group)
+      (mapcar
+       (lambda (sub)
+         (setf (elt sub 3)
+               (format "<v %s>%s</v>"
+                       (car group)
+                       (elt sub 3)))
+         sub)
+       (if (listp (cdr group))
+           (cdr group)
+         (subed-parse-file (cdr group)))))
+    subtitle-info)
+                  :key (lambda (o) (elt o 1)))))
+    (when (stringp output-file)
+      (subed-create-file output-file results t))
+    results))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.vtt\\'" . subed-vtt-mode))

@@ -569,6 +569,10 @@ Combining the two:
 nodemon -w "tests/*.el" -w "subed/*.el" -x "PATTERN=regexp make test-some"
 #+end_src
 
+#+begin_src emacs-lisp
+(setq coverage-dir (expand-file-name "./coverage/"))
+#+end_src
+
 ** Contributions
 :PROPERTIES:
 :CUSTOM_ID: subed-contributions
