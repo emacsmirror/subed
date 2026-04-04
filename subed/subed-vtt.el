@@ -105,13 +105,16 @@ format-specific function for MAJOR-MODE."
       (subed-forward-subtitle-time-start))
     ;; Move to first subtitle that starts at or after MSECS
     (catch 'subtitle-id
-      (while (<= (or (subed-subtitle-msecs-start) -1) msecs)
+      (while (not (eobp))
+        (if (<= (or (subed-subtitle-msecs-start) -1) msecs)
             ;; If stop time is >= MSECS, we found a match
             (let ((cur-sub-end (subed-subtitle-msecs-stop)))
-          (when (and cur-sub-end (>= cur-sub-end msecs))
-            (throw 'subtitle-id (subed-subtitle-id))))
+              (if (and cur-sub-end (>= cur-sub-end msecs))
+                  (throw 'subtitle-id (subed-subtitle-id))
                 (unless (subed-forward-subtitle-id)
-          (throw 'subtitle-id nil))))))
+                  (throw 'subtitle-id nil))))
+          (unless (subed-forward-subtitle-id)
+            (throw 'subtitle-id nil)))))))
 
 ;;; Traversing
 
