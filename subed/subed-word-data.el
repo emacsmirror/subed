@@ -87,7 +87,7 @@ Return a list of ((start . ?), (end . ?) (text . ?))."
 
 (defun subed-word-data--extract-words-from-youtube-vtt (file &optional from-string)
   "Extract the timing from FILE which is a VTT from YouTube.
-Return a list of ((start . ?), (end . ?) (text . ?)).
+Return a list of ((start . ?), (end . ?) (text . ?) (speaker . ?)).
 If FROM-STRING is non-nil, treat FILE as the data itself."
   (with-temp-buffer
     (subed-vtt-mode)
@@ -140,6 +140,7 @@ If FROM-STRING is non-nil, treat FILE as the data itself."
 															 `((start . ,(and .start (* 1000 .start)))
                                  (end . ,(and .end (* 1000 .end)))
 																 (text . ,(identity .word))
+                                 (speaker . ,(identity .speaker))
                                  (score . ,(identity .score)))))
 													 (alist-get 'words segment)))
 								(alist-get 'segments data)))
