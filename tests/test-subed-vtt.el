@@ -2720,19 +2720,18 @@ hi<00:00:03.459><c> welcome</c><00:00:03.850><c> to</c><00:00:03.999><c> another
          (nil 2701 2800 "<v Guest>Sentence 3</v>")
          (nil 4000 5000 "<v Host>Sentence B</v>"))))
     (it "works for subtitle files."
-      (expect
-       (cl-labels
-           (((symbol-function 'subed-parse-file)
+      (spy-on 'subed-parse-file :and-call-fake
              (lambda (filename &optional mode-func)
                (if (string-match "host" filename)
                    '((nil 1000 2000 "Sentence A")
                      (nil 4000 5000 "Sentence B"))
                  '((nil 500 2000 "Sentence 1")
                    (nil 2500 2700 "Sentence 2")
-                   (nil 2701 2800 "Sentence 3"))))))
+                          (nil 2701 2800 "Sentence 3")))))
+      (expect
          (subed-vtt-combine-separate-speaker-files
           '(("Host" . "/tmp/host.vtt")
-            ("Guest" . "/tmp/guest.vtt"))))
+          ("Guest" . "/tmp/guest.vtt")))
        :to-equal
        '((nil 500 2000 "<v Guest>Sentence 1</v>")
          (nil 1000 2000 "<v Host>Sentence A</v>")
