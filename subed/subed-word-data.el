@@ -267,6 +267,7 @@ For now, only JSON or SRV2 files are supported."
 (defvar subed-word-data-compare-normalized-string-distance-threshold 0.2
   "Factor used for similarity comparison.")
 
+;;;###autoload
 (defun subed-word-data-compare-normalized-string-distance (word1 word2)
   "Compare two words and return t if they are similar enough after normalization.
 See `subed-word-data-compare-normalized-string-distance-threshold'."
