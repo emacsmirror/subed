@@ -2806,5 +2806,14 @@ Bar.
 00:03:03.45 --> 00:03:15.5
 Baz.
 "))))
-
-  )
+  (it "can replace [speaker-name]: with <v speaker-name>..</v>."
+    (with-temp-vtt-buffer
+     (subed-append-subtitle-list
+      '((nil 1000 2000 "[Alice]: This is a test.")
+        (nil 3000 4000 "[Bob]: This is a another test.")))
+     (subed-vtt-replace-speaker-diarization-with-tags)
+     (expect
+      (mapcar (lambda (o) (elt o 3)) (subed-subtitle-list))
+      :to-equal
+      '("<v Alice>This is a test.</v>"
+        "<v Bob>This is a another test.</v>")))))

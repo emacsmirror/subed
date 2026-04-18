@@ -617,6 +617,18 @@ Use the format-specific function for MAJOR-MODE."
   (interactive)
   (insert "<" (subed-msecs-to-timestamp subed-mpv-playback-position) ">"))
 
+;;; Speaker-related
+
+(defun subed-vtt-replace-speaker-diarization-with-tags ()
+  "Replace [speaker-name]: text with <v speaker-name>...</v>."
+  (interactive)
+  (subed-for-each-subtitle (point-min) (point-max) t
+    (let ((text (subed-subtitle-text)))
+      (when (string-match "\\[\\(.+?\\)\\]: \\(.+\\)" text)
+        (subed-set-subtitle-text (format "<v %s>%s</v>"
+                                         (match-string 1 text)
+                                         (match-string 2 text)))))))
+
 ;;;###autoload
 (defun subed-vtt-combine-separate-speaker-files (output-file subtitle-info)
   "Combine subtitles from separate VTT files for speakers.
