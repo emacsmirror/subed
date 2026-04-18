@@ -1680,7 +1680,7 @@ position of the point."
             (delete-region (point) (progn (subed-jump-to-subtitle-end) (skip-chars-forward " \t") (point)))
             (when (looking-at "[ \t]+") (replace-match ""))
             (subed-append-subtitle nil new-start-timestamp orig-end (string-trim new-text))
-            (run-hooks #'subed-subtitle-split-hook))
+            (run-hooks 'subed-subtitle-split-hook))
         (error "Could not determine timestamp for splitting")))
     (point)))
 

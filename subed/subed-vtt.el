@@ -632,15 +632,15 @@ Use the format-specific function for MAJOR-MODE."
 ;;;###autoload
 (defun subed-vtt-combine-separate-speaker-files (output-file subtitle-info)
   "Combine subtitles from separate VTT files for speakers.
-SUBTITLE-INFO is an alist. It could be of the form:
+SUBTITLE-INFO is an alist.  It could be of the form:
 
-'((\"host\" . \"/path/to/host.vtt\")
-  (\"guest\" . \"/path/to/guest.vtt\")
-  ...)
+\((\"host\" . \"/path/to/host.vtt\")
+ (\"guest\" . \"/path/to/guest.vtt\")
+ ...)
 
 or:
 
-'((\"host\" subtitle subtitle subtitle) ...)
+\((\"host\" subtitle subtitle subtitle) ...)
 
 where subtitle is like the result of `subed-subtitle'.
 
@@ -649,11 +649,11 @@ VTT speaker tags will be added.
 
 Write the results to OUTPUT-FILE.
 
-If OUTPUT-FILE is nil, return a list of subtitles suitable for `subed-create-file'.
+If OUTPUT-FILE is nil, return a list of subtitles suitable for
+`subed-create-file'.
 
 If called interactively, prompt for the output file, and then prompt for
-labels and input files until a blank label is specified.
-"
+labels and input files until a blank label is specified."
   (interactive
    ;; TODO
    (list
