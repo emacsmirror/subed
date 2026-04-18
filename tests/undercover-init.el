@@ -4,5 +4,8 @@
 (when (require 'undercover nil t)
   (setq coverage-dir (expand-file-name "./coverage/"))
 	(setq undercover-force-coverage t)
-  (undercover "./subed/*.el" (:report-format 'simplecov) (:send-report nil)
+  (undercover "./subed/*.el"
+              (:report-format 'simplecov)
+              (:send-report nil)
+              (:report-file (expand-file-name ".resultset.json" coverage-dir))
 							(:merge-report t)))
