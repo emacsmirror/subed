@@ -558,6 +558,7 @@ distance is expressed as a ratio of number of edits / maximum length of phrase o
 ;; (subed-word-data-find-approximate-match "I already talk pretty quickly," (split-string "I already talk pretty quickly. Oops. I already talk pretty quickly, so I'm not going" " ") "\\<oops\\>")
 ;; (subed-word-data-find-approximate-match "The quick brown fox" (split-string "Well, let's get started. The quick, I mean, the quick brown fox jumps over the lazy dog." " ") "\\<oops\\>") ; hmm, the processing of this one could be improved.
 
+;;;###autoload
 (defun subed-word-data-fix-subtitle-timing (beg end)
   "Sets subtitle starts and stops based on the word data.
 Assumes words haven't been edited."
