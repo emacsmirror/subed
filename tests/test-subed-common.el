@@ -2828,7 +2828,24 @@ This is another.
 				 (expect (subed-subtitle-text) :to-equal "Bar")
 				 (subed-backward-subtitle-time-start)
 				 (expect (subed-subtitle-msecs-stop) :to-equal 63061)
-				 (expect (subed-subtitle-text) :to-equal "Foo.")))))
+				 (expect (subed-subtitle-text) :to-equal "Foo."))))
+    (it "copies the speaker tag."
+      (with-temp-srt-buffer
+       (subed-append-subtitle-list
+        '((1 1000 2000 "[Alice]: This is a test.")
+          (2 3000 4000 "[Bob]: This is another subtitle.")))
+       (re-search-backward "test")
+       (let ((subed-subtitle-split-hook '(subed-copy-speaker-tag-after-splitting))
+             (subed-mpv-playback-position 1500)
+             (subed-subtitle-spacing 1))
+         (subed-split-subtitle)
+         (subed-regenerate-ids)
+         (expect
+          (subed-subtitle-list)
+          :to-equal
+          '((1 1000 1500 "[Alice]: This is a" nil)
+            (2 1501 2000 "[Alice]: test." nil)
+            (3 3000 4000 "[Bob]: This is another subtitle." nil)))))))
 
   (describe "Scaling subtitles"
     (it "without providing beginning and end."
@@ -3704,7 +3721,68 @@ Bar.
 00:03:03,45 --> 00:03:15,5
 Baz.
 ")))))
-
+  (describe "Merging a subtitle with the next one"
+    (describe "when there are speaker tags"
+      (it "removes duplicates."
+        (with-temp-srt-buffer
+         (subed-append-subtitle-list
+          '((1 1000 1500 "[Alice]: This is a" nil)
+            (2 1501 2000 "[Alice]: test." nil)
+            (3 3000 4000 "[Bob]: This is another subtitle." nil)))
+         (goto-char (point-min))
+         (let ((subed-subtitle-merged-hook '(subed-remove-duplicate-speaker-tag-after-merging)))
+           (subed-merge-with-next)
+           (subed-regenerate-ids)
+           (expect
+            (subed-subtitle-list)
+            :to-equal
+            '((1 1000 2000 "[Alice]: This is a test." nil)
+              (2 3000 4000 "[Bob]: This is another subtitle." nil))))))
+      (it "works going backwards."
+        (with-temp-srt-buffer
+         (subed-append-subtitle-list
+          '((1 1000 1500 "[Alice]: This is a" nil)
+            (2 1501 2000 "[Alice]: test." nil)
+            (3 3000 4000 "[Bob]: This is another subtitle." nil)))
+         (let ((subed-subtitle-merged-hook '(subed-remove-duplicate-speaker-tag-after-merging)))
+           (re-search-backward "test")
+           (subed-merge-with-previous)
+           (subed-regenerate-ids)
+           (expect
+            (subed-subtitle-list)
+            :to-equal
+            '((1 1000 2000 "[Alice]: This is a test." nil)
+              (2 3000 4000 "[Bob]: This is another subtitle." nil))))))
+      (it "keeps different ones."
+        (with-temp-srt-buffer
+         (subed-append-subtitle-list
+          '((1 1000 1500 "[Alice]: This is a" nil)
+            (2 1501 2000 "[Alice]: test." nil)
+            (3 3000 4000 "[Bob]: This is another subtitle." nil)))
+         (let ((subed-subtitle-merged-hook '(subed-remove-duplicate-speaker-tag-after-merging)))
+           (re-search-backward "test")
+           (subed-merge-with-next)
+           (subed-regenerate-ids)
+           (expect
+            (subed-subtitle-list)
+            :to-equal
+            '((1 1000 1500 "[Alice]: This is a" nil)
+              (2 1501 4000 "[Alice]: test. [Bob]: This is another subtitle." nil))))))
+      (it "doesn't do anything when merging into a subtitle that doesn't have a speaker tag."
+        (with-temp-srt-buffer
+         (subed-append-subtitle-list
+          '((1 1000 1500 "[Alice]: This is a" nil)
+            (2 1501 2000 "[Alice]: test." nil)
+            (3 3000 4000 "This is another subtitle." nil)))
+         (let ((subed-subtitle-merged-hook '(subed-remove-duplicate-speaker-tag-after-merging)))
+           (re-search-backward "test")
+           (subed-merge-with-next)
+           (subed-regenerate-ids)
+           (expect
+            (subed-subtitle-list)
+            :to-equal
+            '((1 1000 1500 "[Alice]: This is a" nil)
+              (2 1501 4000 "[Alice]: test. This is another subtitle." nil))))))))
   (describe "Merging a region"
     (it "handles empty buffers."
       (with-temp-srt-buffer

@@ -311,10 +311,10 @@ The functions are called with the subtitle's start time.")
   "Functions to call when the times for subtitles in a region have changed.
 The functions are called with BEG and END for the region.")
 
-(defvar-local subed-subtitle-merged-hook nil
+(defvar-local subed-subtitle-merged-hook '(subed-remove-duplicate-speaker-tag-after-merging)
   "Functions to call when a subtitle has been merged.")
 
-(defvar-local subed-subtitle-split-hook nil
+(defvar-local subed-subtitle-split-hook '(subed-copy-speaker-tag-after-splitting)
   "Functions to call when a subtitle has been split.
 The function is called with point at the new subtitle's text.")
 

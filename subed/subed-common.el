@@ -1684,6 +1684,18 @@ position of the point."
         (error "Could not determine timestamp for splitting")))
     (point)))
 
+(defun subed-copy-speaker-tag-after-splitting ()
+  "Copy the previous speaker tag after splitting.
+Can be added to `subed-subtitle-split-hook'."
+  (save-excursion
+    (let (tag)
+      (save-excursion
+        (subed-backward-subtitle-text)
+        (when (looking-at "\\(\\[.+\\]: \\)")
+          (setq tag (match-string 0))
+          (subed-forward-subtitle-text)
+          (insert tag))))))
+
 ;;; Merging
 
 (defun subed-merge-dwim ()
@@ -1731,6 +1743,19 @@ specified, set the current subtitle's text."
   (when (and beg end)
     (subed-merge-region beg end))
   (subed-set-subtitle-text text))
+
+(defun subed-remove-duplicate-speaker-tag-after-merging ()
+  "Remove duplicate speaker tag after merging.
+Can be added to `subed-subtitle-merged-hook'."
+  (save-excursion
+    (let ((text (subed-subtitle-text)))
+      (when (string-match "^\\(\\[.+?\\]: \\)\\(.+\\)" text)
+        (subed-set-subtitle-text
+         (concat (match-string 1 text)
+                 (replace-regexp-in-string
+                  (regexp-quote (match-string 1 text))
+                  ""
+                  (match-string 2 text))))))))
 
 ;;; Replay time-adjusted subtitle
 
