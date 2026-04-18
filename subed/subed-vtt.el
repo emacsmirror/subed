@@ -637,7 +637,7 @@ VTT speaker tags will be added.
 
 Write the results to OUTPUT-FILE.
 
-If OUTPUT-FILE is t, return a list of subtitles suitable for `subed-create-file'.
+If OUTPUT-FILE is nil, return a list of subtitles suitable for `subed-create-file'.
 
 If called interactively, prompt for the output file, and then prompt for
 labels and input files until a blank label is specified.
@@ -655,19 +655,19 @@ labels and input files until a blank label is specified.
          results))
       (nreverse results))))
   (let ((results (sort
-   (seq-mapcat
-    (lambda (group)
-      (mapcar
-       (lambda (sub)
-         (setf (elt sub 3)
-               (format "<v %s>%s</v>"
-                       (car group)
-                       (elt sub 3)))
-         sub)
-       (if (listp (cdr group))
-           (cdr group)
-         (subed-parse-file (cdr group)))))
-    subtitle-info)
+                  (seq-mapcat
+                   (lambda (group)
+                     (mapcar
+                      (lambda (sub)
+                        (setf (elt sub 3)
+                              (format "<v %s>%s</v>"
+                                      (car group)
+                                      (elt sub 3)))
+                        sub)
+                      (if (listp (cdr group))
+                          (cdr group)
+                        (subed-parse-file (cdr group)))))
+                   subtitle-info)
                   :key (lambda (o) (elt o 1)))))
     (when (stringp output-file)
       (subed-create-file output-file results t))

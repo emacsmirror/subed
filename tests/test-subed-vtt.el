@@ -2706,6 +2706,7 @@ hi<00:00:03.459><c> welcome</c><00:00:03.850><c> to</c><00:00:03.999><c> another
     (it "works for subtitle lists."
       (expect
        (subed-vtt-combine-separate-speaker-files
+        nil
         '(("Host"
            (nil 1000 2000 "Sentence A")
            (nil 4000 5000 "Sentence B"))
