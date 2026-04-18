@@ -314,6 +314,10 @@ The functions are called with BEG and END for the region.")
 (defvar-local subed-subtitle-merged-hook nil
   "Functions to call when a subtitle has been merged.")
 
+(defvar-local subed-subtitle-split-hook nil
+  "Functions to call when a subtitle has been split.
+The function is called with point at the new subtitle's text.")
+
 (declare-function subed-subtitle-msecs-start "subed-common" (&optional id))
 
 (defun subed--run-subtitle-time-adjusted-hook ()
