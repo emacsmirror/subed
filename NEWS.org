@@ -1,9 +1,35 @@
 #+OPTIONS: toc:nil
 
 * subed news
-** Development
+** Version 1.4.2 - 2026-04-18 - Sacha Chua
 
-- New function ~subed-vtt-combine-separate-speaker-files~ can combine VTT, such as when you transcribe different tracks of a conversation.
+- New commands:
+  - ~subed-vtt-insert-chapter-comments~ takes chapter markers as a string and adds NOTE comments defining those chapters, which you can extract with ~subed-section-comments-as-chapters~ after you adjust them.
+  - ~subed-vtt-combine-separate-speaker-files~ can combine VTT, such as when you transcribe different tracks of a conversation.
+  - ~subed-duplicate-subtitle~
+  - ~subed-mpv-jump-to-timestamp-or-current-subtitle~
+  - ~subed-vtt-insert-word-timestamp~
+- New hooks:
+  - ~subed-subtitle-split-hook~.
+  - ~subed-waveform-make-overlay-hook~
+- New functions:
+  - ~subed-subtitle-end-pos~
+- New autoloads:
+  - ~subed-word-data-fix-subtitle-timing~
+  - ~subed-word-data-compare-normalized-string-distance~
+- ~[Speaker]:~ tags are copied or deduplicated when splitting or merging subtitles.
+- subed-vtt:
+  - Check for the end of the buffer.
+  - Sanitize/validate to make sure there are separators.
+- subed-waveform:
+  - ~subed-waveform--mouse-event-to-ms~ now takes an optional parameter for the X coordinate to convert.
+  - Refresh waveforms after splitting.
+  - ~subed-waveform-jump-to-timestamp~: Copy the timestamp for easier pasting.
+  - New options ~subed-waveform-image-width~ and ~subed-waveform-image-height~
+- subed-word-data: Include speaker diarization if available.
+- ~subed-align-mfa-set-word-data~ can now work on a region or sepcify beam size.
+- ~subed-file-duration-ms~: Cache based on filename to support multiple files.
+- Updated tests to work on Emacs 31.
 
 ** Version 1.4.1 - 2026-02-16 - Sacha Chua
 
