@@ -1688,13 +1688,11 @@ position of the point."
   "Copy the previous speaker tag after splitting.
 Can be added to `subed-subtitle-split-hook'."
   (save-excursion
-    (let (tag)
-      (save-excursion
-        (subed-backward-subtitle-text)
-        (when (looking-at "\\(\\[.+\\]: \\)")
-          (setq tag (match-string 0))
-          (subed-forward-subtitle-text)
-          (insert tag))))))
+    (subed-backward-subtitle-text)
+    (when (looking-at "\\(\\[.+\\]: \\)")
+      (let ((tag (match-string 0)))
+        (subed-forward-subtitle-text)
+        (insert tag)))))
 
 ;;; Merging
 
