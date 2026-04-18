@@ -589,13 +589,13 @@ Controlled by `subed-waveform-show-all`."
        (goto-char (elt (elt event 1) 1))
        (subed-waveform-put-svg))))
 
-(defun subed-waveform--mouse-event-to-ms (event)
+(defun subed-waveform--mouse-event-to-ms (event &optional x)
   "Return the millisecond position of EVENT."
   (let* ((obj (car (elt (cadr event) 4)))
          (start (get-text-property 0 'waveform-start obj))
          (stop (get-text-property 0 'waveform-stop obj))
          (resolution (get-text-property 0 'waveform-resolution obj))
-         (x (car (elt (cadr event) 8)))
+         (x (or x (car (elt (cadr event) 8))))
          (width (car (elt (cadr event) 9))))
     (* subed-waveform-timestamp-resolution
        (round (+ (* (/ (* 1.0 x) width)
