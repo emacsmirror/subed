@@ -674,6 +674,35 @@ labels and input files until a blank label is specified.
     results))
 
 ;;;###autoload
+(defun subed-vtt-insert-chapter-comments (chapters)
+  "Adds NOTE comments for the CHAPTERS.
+CHAPTERS should be a string of the form
+
+mm:ss chapter title
+hh:mm:ss chapter title"
+  (interactive "MChapters: ")
+  (let ((chapter-list
+         (seq-keep
+          (lambda (line)
+						(when (string-match "\\([0-9:]+\\) \\(.+\\)" line)
+              (cons (save-match-data (subed-timestamp-to-msecs (match-string 1 line)))
+                    (match-string 2 line))))
+					(split-string (string-trim chapters) "\n"))))
+    (subed-for-each-subtitle (point-min) (point-max) nil
+      (when (and chapter-list
+                 (>= (subed-subtitle-msecs-start)
+                     (car (car chapter-list))))
+        (let ((text (cdr (car chapter-list)))
+              (current-comment (subed-subtitle-comment)))
+          (if current-comment
+              (unless (string-match (regexp-quote text) current-comment)
+                (subed-set-subtitle-comment
+                 (concat (cdr (car chapter-list))
+                         "\n" current-comment)))
+            (subed-set-subtitle-comment text)))
+        (pop chapter-list)))))
+
+;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.vtt\\'" . subed-vtt-mode))
 
 (provide 'subed-vtt)

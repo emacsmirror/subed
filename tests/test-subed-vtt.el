@@ -2721,20 +2721,89 @@ hi<00:00:03.459><c> welcome</c><00:00:03.850><c> to</c><00:00:03.999><c> another
          (nil 4000 5000 "<v Host>Sentence B</v>"))))
     (it "works for subtitle files."
       (spy-on 'subed-parse-file :and-call-fake
-             (lambda (filename &optional mode-func)
-               (if (string-match "host" filename)
-                   '((nil 1000 2000 "Sentence A")
-                     (nil 4000 5000 "Sentence B"))
-                 '((nil 500 2000 "Sentence 1")
-                   (nil 2500 2700 "Sentence 2")
+              (lambda (filename &optional mode-func)
+                      (if (string-match "host" filename)
+                          '((nil 1000 2000 "Sentence A")
+                            (nil 4000 5000 "Sentence B"))
+                        '((nil 500 2000 "Sentence 1")
+                          (nil 2500 2700 "Sentence 2")
                           (nil 2701 2800 "Sentence 3")))))
       (expect
-         (subed-vtt-combine-separate-speaker-files
-          '(("Host" . "/tmp/host.vtt")
+       (subed-vtt-combine-separate-speaker-files
+        nil
+        '(("Host" . "/tmp/host.vtt")
           ("Guest" . "/tmp/guest.vtt")))
        :to-equal
        '((nil 500 2000 "<v Guest>Sentence 1</v>")
          (nil 1000 2000 "<v Host>Sentence A</v>")
          (nil 2500 2700 "<v Guest>Sentence 2</v>")
          (nil 2701 2800 "<v Guest>Sentence 3</v>")
-         (nil 4000 5000 "<v Host>Sentence B</v>"))))))
+         (nil 4000 5000 "<v Host>Sentence B</v>")))))
+  (describe "inserting chapter comments"
+    (it "adds a note to the first subtitle if specified."
+      (with-temp-vtt-buffer
+       (insert mock-vtt-data)
+       (subed-vtt-insert-chapter-comments "0:00 Introduction")
+       (expect
+        (buffer-string)
+        :to-equal
+        "WEBVTT
+
+NOTE Introduction
+
+00:01:01.000 --> 00:01:05.123
+Foo.
+
+00:02:02.234 --> 00:02:10.345
+Bar.
+
+00:03:03.45 --> 00:03:15.5
+Baz.
+")))
+    (it "does not duplicate NOTEs."
+      (with-temp-vtt-buffer
+       (insert mock-vtt-data)
+       (subed-vtt-insert-chapter-comments "0:00 Introduction")
+       (subed-vtt-insert-chapter-comments "0:00 Introduction")
+       (expect
+        (buffer-string)
+        :to-equal
+        "WEBVTT
+
+NOTE Introduction
+
+00:01:01.000 --> 00:01:05.123
+Foo.
+
+00:02:02.234 --> 00:02:10.345
+Bar.
+
+00:03:03.45 --> 00:03:15.5
+Baz.
+")))
+    (it "prepends the NOTE if there is an existing one."
+      (with-temp-vtt-buffer
+       (insert mock-vtt-data)
+       (re-search-backward "Bar")
+       (subed-set-subtitle-comment "#+COMMENT: Hello")
+       (subed-vtt-insert-chapter-comments "2:00 Another test")
+       (expect
+        (buffer-string)
+        :to-equal
+        "WEBVTT
+
+00:01:01.000 --> 00:01:05.123
+Foo.
+
+NOTE
+Another test
+#+COMMENT: Hello
+
+00:02:02.234 --> 00:02:10.345
+Bar.
+
+00:03:03.45 --> 00:03:15.5
+Baz.
+"))))
+
+  )
