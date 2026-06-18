@@ -34,6 +34,8 @@
 
 (declare-function subed-tsv-mode "subed-tsv" ())
 (declare-function subed-guess-format "subed" (&optional filename))
+(declare-function org-end-of-meta-data "org")
+(declare-function prop-match-value "text-property-search")
 
 ;;; Generic functions and variables
 
@@ -2723,7 +2725,6 @@ Assumes the text in this buffer is the same as the subtitles."
            'subed-start
            (elt (pop subtitles) 1))
           (goto-char (match-end 0)))
-      (edebug)
       (message "Could not find %s" (elt (pop subtitles) 3)))))
 
 (defvar-local subed--subtitle-buffer "Buffer with the subtitles.")
@@ -3117,7 +3118,7 @@ Adjusted subtitles will also be written alongside the file."
 									  (goto-char end)
 									  (or (subed-subtitle-msecs-stop)
 											  (and
-												 (subed-backward-subtitle-start)
+												 (subed-backward-subtitle-start-pos)
 												 (subed-subtitle-msecs-stop)))))
 				 (input (subed-media-file))
          (input-mode major-mode)

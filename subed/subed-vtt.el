@@ -32,6 +32,9 @@
 (require 'subed-debug)
 (require 'subed-common)
 
+(defvar subed-waveform-show-all)
+(declare-function subed-waveform-refresh "subed-waveform")
+
 ;;; Syntax highlighting
 
 (defconst subed-vtt-font-lock-keywords
@@ -741,7 +744,8 @@ Match subtitles based on time."
 
 ;;;###autoload
 (defun subed-vtt-mpv-skim-subtitles-with-comments (&optional msecs)
-  "Play the first MSECS of each subtitle with a comment from point to end of buffer.
+  "Play the first MSECS of each subtitle with a comment.
+Process subtitles from point to end of buffer.
 If MSECS is not specified, use `subed-mpv-skim-msecs'."
   (interactive (list (and current-prefix-arg
                           (prefix-numeric-value current-prefix-arg))))

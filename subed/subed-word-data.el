@@ -188,6 +188,7 @@ Supports WhisperX JSON, YouTube VTT, and Youtube SRV2 files."
     (subed-word-data-refresh-text-properties)
     data))
 
+;;;###autoload
 (defun subed-word-data-parse-file (file &optional offset-ms)
   "Parse FILE for word data.
 Return a list of ((start . ?), (end . ?) (text . ?)).

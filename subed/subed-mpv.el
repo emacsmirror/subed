@@ -41,6 +41,12 @@
 (declare-function subed-to-msecs "subed-common")
 (declare-function subed-clear-file-duration-ms-cache "subed-common")
 (declare-function subed-jump-to-current-subtitle "subed-common")
+(declare-function subed-jump-to-next-speaker "subed-common")
+(declare-function subed-jump-to-previous-speaker "subed-common")
+(declare-function subed-waveform-refresh "subed-waveform")
+(declare-function subed-disable-loop-over-current-subtitle "subed-common")
+(defvar subed-waveform-show-all)
+
 
 (defvar subed-mpv-control-map)                      ; Defined in subed.el
 (defvar subed-mpv-frame-step-map)
@@ -588,7 +594,8 @@ See `subed-mpv-control-map'."
 (defvar subed-mpv-skim-msecs 1000 "Number of msecs to play when skimming.")
 
 ;;;###autoload
-(defun subed-mpv-skim-starts (&optonal msecs)
+(defun subed-mpv-skim-starts (&optional msecs)
+  "Play MSECS or `subed-mpv-skim-msecs` of each subtitle."
 	(interactive (list current-prefix-arg))
 	(subed-mpv-unpause)
 	(subed-disable-loop-over-current-subtitle)
